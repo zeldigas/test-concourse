@@ -43,8 +43,6 @@ jobs:
 
       inputs:
         - name: repo
-      outputs:
-        - name: updated-gist
       run:
         path: cat
         args: [repo/test.md]
