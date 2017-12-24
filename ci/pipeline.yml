@@ -1,0 +1,50 @@
+---
+resources:
+- name: repo
+  type: git
+  source:
+    branch:      master
+    uri:         ((publishing-outputs-gist-uri))
+    private_key: ((publishing-outputs-private-key))
+
+jobs:
+- name: Make modification
+  public: true
+  plan:
+  - get: repo
+  - task: modify file
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: { repository: starkandwayne/concourse }
+
+      inputs:
+        - name: repo
+      outputs:
+        - name: updated-repo
+      run:
+        path: repo/ci/tasks/do_modification.sh
+  - put: repo
+    params:
+      repository: updated-repo
+
+- name: Read contents
+  public: true
+  plan:
+  - get: repo
+    passed: ["Make modification"]
+  - task: modify file
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: { repository: starkandwayne/concourse }
+
+      inputs:
+        - name: repo
+      outputs:
+        - name: updated-gist
+      run:
+        path: cat
+        args: [repo/test.md]
